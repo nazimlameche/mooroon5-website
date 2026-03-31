@@ -1,0 +1,30 @@
+# ── Environment ──────────────────────────────
+.env
+.env.local
+.env.*.local
+
+# ── Node / Vite frontend ──────────────────────
+node_modules/
+dist/
+build/
+.vite/
+*.local
+
+# ── Python service ────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+
+# ── OS ────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ── Editor ────────────────────────────────────
+.idea/
+.vscode/
+*.swp
+*.swo

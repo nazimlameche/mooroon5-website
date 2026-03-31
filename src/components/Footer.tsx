@@ -1,13 +1,15 @@
-import logoUrl from '../assets/logo.svg'
+import { motion, useReducedMotion } from 'framer-motion'
+import { Feather } from 'lucide-react'
+import logoUrl from '../assets/logo.png'
 
 export default function Footer() {
+  const reducedMotion = useReducedMotion()
+
   return (
     <footer
-      className="relative py-16 px-6"
+      className="relative w-full py-16 px-6"
       style={{
-        background: `
-          linear-gradient(to bottom, var(--color-bg-deep), #060504)
-        `,
+        background: 'linear-gradient(to bottom, var(--color-bg-deep), #060504)',
       }}
     >
       {/* Top border */}
@@ -18,12 +20,29 @@ export default function Footer() {
         }}
       />
 
-      <div className="max-w-4xl mx-auto flex flex-col items-center gap-6">
+      <motion.div
+        className="max-w-4xl mx-auto flex flex-col items-center gap-5"
+        initial={reducedMotion ? undefined : { opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        viewport={{ once: true }}
+      >
         {/* Logo */}
         <img
           src={logoUrl}
           alt="Mooroon5"
           className="w-16 h-16 object-contain opacity-70"
+        />
+
+        {/* Feather quill accent */}
+        <Feather
+          className="w-5 h-5"
+          style={{
+            color: 'var(--color-gold-dim)',
+            transform: 'rotate(-30deg)',
+            opacity: 0.6,
+            filter: 'drop-shadow(0 0 4px rgba(201,168,76,0.2))',
+          }}
         />
 
         {/* Text */}
@@ -54,7 +73,7 @@ export default function Footer() {
         >
           Mooroon5 &mdash; {new Date().getFullYear()}
         </p>
-      </div>
+      </motion.div>
     </footer>
   )
 }

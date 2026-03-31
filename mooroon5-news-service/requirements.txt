@@ -1,0 +1,5 @@
+tavily-python
+newspaper4k
+anthropic
+resend
+python-dotenv

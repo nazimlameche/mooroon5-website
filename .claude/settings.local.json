@@ -15,7 +15,8 @@
       "Bash(node -e \":*)",
       "mcp__Claude_Preview__preview_start",
       "Bash(npx vite:*)",
-      "Read(//c/Users/nazim/.nvm/versions/node/v24.14.1/bin/**)"
+      "Read(//c/Users/nazim/.nvm/versions/node/v24.14.1/bin/**)",
+      "mcp__playwright__browser_take_screenshot"
     ]
   }
 }
