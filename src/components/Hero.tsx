@@ -1,9 +1,21 @@
 import { useState } from 'react'
-import { motion, AnimatePresence, useReducedMotion, useAnimation } from 'framer-motion'
+import { motion, AnimatePresence, useReducedMotion, useAnimation, type Variants } from 'framer-motion'
 import { Crown, Sparkles } from 'lucide-react'
 import logoUrl from '../assets/logo.png'
 
 const members = ['Nazim', 'Basile', 'Maia', 'Gabriel', 'Tieoule', 'Thomas']
+
+const container: Variants = {
+  hidden: {},
+  show: {
+    transition: { staggerChildren: 0.12, delayChildren: 0.2 },
+  },
+}
+
+const fadeUp: Variants = {
+  hidden: { opacity: 0, y: 25 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.7, ease: [0.25, 0.1, 0.25, 1] } },
+}
 
 /* ─── Animated Member Name ─── */
 function MagicName({ name, index }: { name: string; index: number }) {
@@ -78,18 +90,6 @@ export default function Hero() {
     crestControls
       .start({ rotateY: 360, transition: { duration: 1.4, ease: [0.4, 0, 0.2, 1] } })
       .then(() => crestControls.set({ rotateY: 0 }))
-  }
-
-  const container = {
-    hidden: {},
-    show: {
-      transition: { staggerChildren: 0.12, delayChildren: 0.2 },
-    },
-  }
-
-  const fadeUp = {
-    hidden: { opacity: 0, y: 25 },
-    show: { opacity: 1, y: 0, transition: { duration: 0.7, ease: 'easeOut' } },
   }
 
   return (

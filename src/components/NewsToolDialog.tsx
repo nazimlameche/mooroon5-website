@@ -11,8 +11,6 @@ import {
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
-const API_URL = 'http://localhost:8000'
-
 type Status = 'idle' | 'loading' | 'success' | 'error'
 
 interface NewsToolDialogProps {
@@ -32,23 +30,23 @@ export default function NewsToolDialog({ open, onOpenChange }: NewsToolDialogPro
     setMessage('')
 
     try {
-      const res = await fetch(`${API_URL}/send`, {
+      const res = await fetch('/api/subscribe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, company_name: company }),
+        body: JSON.stringify({ email, company }),
       })
 
-      const data = await res.json()
+      const data = (await res.json()) as { success?: boolean; error?: string }
 
       if (!res.ok) {
-        throw new Error(data.detail ?? 'Unknown error')
+        throw new Error(data.error ?? 'Something went wrong, please try again.')
       }
 
       setStatus('success')
-      setMessage(data.message)
+      setMessage('✨ Your subscription request has been sent!')
     } catch (err) {
       setStatus('error')
-      setMessage(err instanceof Error ? err.message : 'Failed to connect to the news service.')
+      setMessage(err instanceof Error ? err.message : 'Something went wrong, please try again.')
     }
   }
 
@@ -79,10 +77,7 @@ export default function NewsToolDialog({ open, onOpenChange }: NewsToolDialogPro
                 className="w-10 h-10 rounded-lg flex items-center justify-center"
                 style={{ background: 'rgba(201,168,76,0.08)', border: '1px solid rgba(201,168,76,0.2)' }}
               >
-                <Newspaper
-                  className="w-5 h-5"
-                  style={{ color: 'var(--color-gold)' }}
-                />
+                <Newspaper className="w-5 h-5" style={{ color: 'var(--color-gold)' }} />
               </div>
               <DialogTitle
                 className="text-xl font-bold tracking-wide"
@@ -188,9 +183,10 @@ export default function NewsToolDialog({ open, onOpenChange }: NewsToolDialogPro
                 )}
                 style={{
                   fontFamily: 'var(--font-display)',
-                  background: status === 'loading'
-                    ? 'rgba(201,168,76,0.15)'
-                    : 'linear-gradient(135deg, rgba(201,168,76,0.2) 0%, rgba(201,168,76,0.08) 100%)',
+                  background:
+                    status === 'loading'
+                      ? 'rgba(201,168,76,0.15)'
+                      : 'linear-gradient(135deg, rgba(201,168,76,0.2) 0%, rgba(201,168,76,0.08) 100%)',
                   border: '1px solid rgba(201,168,76,0.4)',
                   color: 'var(--color-gold)',
                 }}
@@ -198,12 +194,12 @@ export default function NewsToolDialog({ open, onOpenChange }: NewsToolDialogPro
                 {status === 'loading' ? (
                   <span className="flex items-center justify-center gap-2">
                     <Loader className="w-4 h-4 animate-spin" />
-                    Dispatching…
+                    Sending…
                   </span>
                 ) : (
                   <span className="flex items-center justify-center gap-2">
                     <Send className="w-4 h-4" />
-                    Send Briefing
+                    Subscribe
                   </span>
                 )}
               </Button>
@@ -216,10 +212,7 @@ export default function NewsToolDialog({ open, onOpenChange }: NewsToolDialogPro
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.4 }}
             >
-              <CheckCircle
-                className="w-12 h-12"
-                style={{ color: 'var(--color-gold)' }}
-              />
+              <CheckCircle className="w-12 h-12" style={{ color: 'var(--color-gold)' }} />
               <p
                 className="text-base"
                 style={{ fontFamily: 'var(--font-body)', color: 'var(--color-parchment)' }}
@@ -230,10 +223,7 @@ export default function NewsToolDialog({ open, onOpenChange }: NewsToolDialogPro
                 onClick={() => handleClose(false)}
                 variant="ghost"
                 className="text-xs uppercase tracking-[0.15em] mt-2"
-                style={{
-                  fontFamily: 'var(--font-display)',
-                  color: 'var(--color-parchment-dim)',
-                }}
+                style={{ fontFamily: 'var(--font-display)', color: 'var(--color-parchment-dim)' }}
               >
                 Close
               </Button>
