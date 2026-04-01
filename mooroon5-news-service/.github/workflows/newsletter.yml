@@ -24,7 +24,7 @@ jobs:
       - name: Run newsletter
         env:
           TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }}
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           FROM_EMAIL: ${{ secrets.FROM_EMAIL }}
         run: python mooroon5-news-service/main.py

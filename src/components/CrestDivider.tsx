@@ -12,6 +12,7 @@ export default function CrestDivider({ icon: Icon, className = '' }: CrestDivide
   return (
     <motion.div
       className={`relative flex items-center justify-center py-12 md:py-16 px-6 ${className}`}
+      style={{ background: 'var(--color-bg-deep)' }}
       initial={reducedMotion ? undefined : { opacity: 0 }}
       whileInView={{ opacity: 1 }}
       transition={{ duration: 0.8 }}

@@ -7,7 +7,7 @@ Automated weekly company news newsletter. Runs every Monday via GitHub Actions.
 1. Loads active subscriptions from `subscriptions.json`
 2. Searches recent news for each company via Tavily
 3. Fetches full article content via newspaper4k (falls back to snippets)
-4. Summarizes with Claude Haiku (claude-haiku-4-5)
+4. Summarizes with Gemini Flash (gemini-1.5-flash)
 5. Sends a styled HTML email via Resend
 
 ## Setup
@@ -23,7 +23,7 @@ Edit `.env` with your real keys:
 | Variable | Where to get it |
 |---|---|
 | `TAVILY_API_KEY` | [app.tavily.com](https://app.tavily.com) |
-| `ANTHROPIC_API_KEY` | [console.anthropic.com](https://console.anthropic.com) |
+| `GEMINI_API_KEY` | [aistudio.google.com](https://aistudio.google.com) |
 | `RESEND_API_KEY` | [resend.com](https://resend.com) |
 | `FROM_EMAIL` | A verified sender address in your Resend account |
 
@@ -61,7 +61,7 @@ Set `"is_active": false` to pause a subscription without deleting it.
 Add these secrets in your repository settings (`Settings > Secrets > Actions`):
 
 - `TAVILY_API_KEY`
-- `ANTHROPIC_API_KEY`
+- `GEMINI_API_KEY`
 - `RESEND_API_KEY`
 - `FROM_EMAIL`
 

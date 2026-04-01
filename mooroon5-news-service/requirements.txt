@@ -1,5 +1,8 @@
 tavily-python
 newspaper4k
-anthropic
+google-generativeai
 resend
 python-dotenv
+fastapi[standard]
+uvicorn
+email-validator
