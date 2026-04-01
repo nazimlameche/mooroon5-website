@@ -1,31 +1,19 @@
-import json
-import os
-from pathlib import Path
-
 from dotenv import load_dotenv
 
+from db import get_active_subscriptions, update_last_sent
 from fetcher import fetch_news
 from summarizer import summarize
 from email_sender import send_email
 
 load_dotenv()
 
-SUBSCRIPTIONS_FILE = Path(__file__).parent / "subscriptions.json"
-
-
-def load_subscriptions() -> list[dict]:
-    """Load all subscriptions from subscriptions.json."""
-    with open(SUBSCRIPTIONS_FILE, "r", encoding="utf-8") as f:
-        return json.load(f)
-
 
 def run() -> None:
-    subscriptions = load_subscriptions()
-    active = [s for s in subscriptions if s["is_active"]]
+    subscriptions = get_active_subscriptions()
 
-    print(f"📬 Processing {len(active)} active subscription(s)...")
+    print(f"📬 Processing {len(subscriptions)} active subscription(s)...")
 
-    for sub in active:
+    for sub in subscriptions:
         company: str = sub["company_name"]
         email: str = sub["email"]
 
@@ -37,6 +25,7 @@ def run() -> None:
 
             summary = summarize(company, articles)
             send_email(email, company, summary)
+            update_last_sent(email, company)
             print(f"✅ Sent to {email} for {company}")
 
         except Exception as e:

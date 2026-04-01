@@ -6,3 +6,4 @@ python-dotenv
 fastapi[standard]
 uvicorn
 email-validator
+psycopg2-binary

@@ -1,14 +1,17 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { Resend } from 'resend'
+import postgres from 'postgres'
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
+  const dbUrl = process.env.NEON_DATABASE_URL
   const apiKey = process.env.RESEND_API_KEY
   const fromEmail = process.env.FROM_EMAIL
 
+  if (!dbUrl) throw new Error('NEON_DATABASE_URL environment variable is not set')
   if (!apiKey) throw new Error('RESEND_API_KEY environment variable is not set')
   if (!fromEmail) throw new Error('FROM_EMAIL environment variable is not set')
 
@@ -21,16 +24,46 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(400).json({ error: 'Company is required' })
   }
 
-  const resend = new Resend(apiKey)
+  const cleanEmail = email.trim().toLowerCase()
+  const cleanCompany = company.trim()
 
-  const date = new Date().toLocaleDateString('en-GB', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  })
+  const sql = postgres(dbUrl, { ssl: 'require' })
 
-  const html = `
+  try {
+    // Create table if not exists
+    await sql`
+      CREATE TABLE IF NOT EXISTS subscriptions (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        email VARCHAR(255) NOT NULL,
+        company_name VARCHAR(255) NOT NULL,
+        is_active BOOLEAN DEFAULT true,
+        created_at TIMESTAMP DEFAULT NOW(),
+        last_sent_at TIMESTAMP
+      )
+    `
+
+    // Check for existing subscription
+    const existing = await sql`
+      SELECT id FROM subscriptions
+      WHERE email = ${cleanEmail}
+        AND company_name = ${cleanCompany}
+      LIMIT 1
+    `
+
+    if (existing.length > 0) {
+      return res.status(409).json({ error: 'Already subscribed' })
+    }
+
+    // Insert new subscription
+    await sql`
+      INSERT INTO subscriptions (email, company_name)
+      VALUES (${cleanEmail}, ${cleanCompany})
+    `
+
+    // Send confirmation email to subscriber
+    const resend = new Resend(apiKey)
+
+    const html = `
 <!DOCTYPE html>
 <html>
 <head><meta charset="utf-8" /></head>
@@ -47,42 +80,28 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           <tr>
             <td style="padding:32px 40px 24px;border-bottom:1px solid #4a3520;">
               <p style="margin:0 0 6px;font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:#b8995a;">Mooroon5 · News Intelligence</p>
-              <h1 style="margin:0;font-size:22px;font-weight:700;color:#c9a84c;letter-spacing:0.05em;">New Subscription Request</h1>
+              <h1 style="margin:0;font-size:22px;font-weight:700;color:#c9a84c;letter-spacing:0.05em;">Subscription Confirmed</h1>
             </td>
           </tr>
           <!-- Body -->
           <tr>
             <td style="padding:28px 40px;">
-              <table width="100%" cellpadding="0" cellspacing="0">
-                <tr>
-                  <td style="padding:10px 0;border-bottom:1px solid #3d2b1a;">
-                    <p style="margin:0;font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:#b8995a;">Email</p>
-                    <p style="margin:4px 0 0;font-size:15px;color:#f5e6c8;">${email.trim()}</p>
-                  </td>
-                </tr>
-                <tr>
-                  <td style="padding:10px 0;border-bottom:1px solid #3d2b1a;">
-                    <p style="margin:0;font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:#b8995a;">Company</p>
-                    <p style="margin:4px 0 0;font-size:15px;color:#f5e6c8;">${company.trim()}</p>
-                  </td>
-                </tr>
-                <tr>
-                  <td style="padding:10px 0 0;">
-                    <p style="margin:0;font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:#b8995a;">Date</p>
-                    <p style="margin:4px 0 0;font-size:15px;color:#f5e6c8;">${date}</p>
-                  </td>
-                </tr>
-              </table>
+              <p style="margin:0 0 20px;font-size:15px;color:#f5e6c8;line-height:1.7;">
+                You will receive weekly news about <strong style="color:#c9a84c;">${cleanCompany}</strong> every Monday morning.
+              </p>
+              <div style="background:#1a1008;border:1px solid #4a3520;border-radius:6px;padding:16px 20px;">
+                <p style="margin:0;font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:#b8995a;">Subscribed for</p>
+                <p style="margin:6px 0 0;font-size:16px;font-weight:700;color:#c9a84c;">${cleanCompany}</p>
+              </div>
+              <p style="margin:24px 0 0;font-size:13px;color:#b8995a;font-style:italic;line-height:1.6;">
+                To unsubscribe, reply to this email with "Unsubscribe" in the subject.
+              </p>
             </td>
           </tr>
-          <!-- Note -->
+          <!-- Footer -->
           <tr>
-            <td style="padding:0 40px 32px;">
-              <div style="background:#1a1008;border:1px solid #4a3520;border-radius:6px;padding:16px 20px;">
-                <p style="margin:0;font-size:13px;color:#b8995a;font-style:italic;">
-                  Add this subscription to <code style="background:#3d2b1a;color:#c9a84c;padding:1px 6px;border-radius:3px;font-style:normal;">subscriptions.json</code> and push to activate.
-                </p>
-              </div>
+            <td style="padding:0 40px 28px;">
+              <p style="margin:0;font-size:12px;color:#4a3520;">— The Mooroon5 Team</p>
             </td>
           </tr>
           <!-- Bottom gold border -->
@@ -97,16 +116,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 </html>
 `
 
-  const { error } = await resend.emails.send({
-    from: fromEmail,
-    to: 'newsletter@mooroon5.fr',
-    subject: `🧙 New Newsletter Subscription — ${company.trim()}`,
-    html,
-  })
+    const { error: emailError } = await resend.emails.send({
+      from: fromEmail,
+      to: cleanEmail,
+      subject: `✨ Subscription confirmed — ${cleanCompany}`,
+      html,
+    })
 
-  if (error) {
-    return res.status(500).json({ error: error.message })
+    if (emailError) {
+      // Subscription saved — don't fail the request over email
+      console.error('Confirmation email failed:', emailError.message)
+    }
+
+    return res.status(200).json({ success: true })
+  } finally {
+    await sql.end()
   }
-
-  return res.status(200).json({ success: true })
 }
